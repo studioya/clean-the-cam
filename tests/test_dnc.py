@@ -7,11 +7,21 @@ import pytest
 from clean_the_cam import dnc, settings
 
 
+class FakeDisp:
+    def GetIDsOfNames(self, name):
+        assert name == 'LoadFile'
+        return 3
+
+    def InvokeTypes(self, dispid, lcid, flags, rettype, argtypes, *args):
+        assert dispid == 3 and argtypes == ((8 | 0x4000, 3),)   # BSTR by reference
+        FakeDnc.loaded.append(args[0])
+
+
 class FakeDnc:
     loaded = []
 
-    def LoadFile(self, path):
-        FakeDnc.loaded.append(path)
+    def __init__(self):
+        self._oleobj_ = FakeDisp()
 
 
 @pytest.fixture
@@ -27,6 +37,9 @@ def fake_com(monkeypatch):
     client = types.SimpleNamespace(Dispatch=Dispatch)
     monkeypatch.setitem(sys.modules, 'win32com', types.SimpleNamespace(client=client))
     monkeypatch.setitem(sys.modules, 'win32com.client', client)
+    monkeypatch.setitem(sys.modules, 'pythoncom', types.SimpleNamespace(
+        DISPATCH_METHOD=1, VT_VARIANT=12, VT_BSTR=8, VT_BYREF=0x4000))
+    monkeypatch.setattr(dnc, 'show_dnc', lambda exe, timeout=5.0: True)
     FakeDnc.loaded = []
     return calls
 

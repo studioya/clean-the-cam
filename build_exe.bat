@@ -19,7 +19,8 @@ if errorlevel 1 goto :testsfailed
 echo.
 echo Building CleanTheCAM.exe ...
 python -m PyInstaller --onefile --noconsole --name CleanTheCAM --clean ^
-    --hidden-import win32com.client CleanTheCAM.py
+    --hidden-import win32com.client --hidden-import win32gui --hidden-import win32process ^
+    --hidden-import win32api --hidden-import win32con CleanTheCAM.py
 if errorlevel 1 goto :failed
 
 echo.
