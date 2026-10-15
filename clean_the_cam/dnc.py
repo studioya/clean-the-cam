@@ -3,9 +3,11 @@ Hand a finished program to Metalix DNC for transfer to the machine.
 
 cncKad's simulator starts DNC as an automation server ("DNC2000.exe
 -Embedding") and calls DNC.Document.LoadFile with the path. DNC takes the path
-BY REFERENCE (a plain text argument gives "Type mismatch"). A server started
-this way is hidden, so its window is shown afterwards. If any of that fails,
-DNC is opened normally with the output path on the clipboard.
+BY REFERENCE (a plain text argument gives "Type mismatch") and starts the
+transfer to the machine straight away, as it does from cncKad. A server started
+this way is hidden, so its window is shown afterwards; DNC stays open after
+Clean The CAM lets go of it (tested on the shop PC, DNC 19.2.350). If any of
+that fails, DNC is opened normally with the output path on the clipboard.
 """
 
 import os
@@ -15,11 +17,6 @@ import time
 
 class DncError(Exception):
     pass
-
-
-# DNC runs as an automation server and may close once the last reference to
-# it is released, so the one we create is kept alive while Clean The CAM runs.
-_live = None
 
 
 def _load(progid, method, path):
@@ -91,7 +88,6 @@ def show_dnc(exe, timeout=5.0):
 
 def load_into_dnc(path, settings):
     """Returns (message, used_automation). Raises DncError on failure."""
-    global _live
     path = os.path.abspath(path)
     if not os.path.isfile(path):
         raise DncError(f"Output file not found:\n{path}")
@@ -101,13 +97,11 @@ def load_into_dnc(path, settings):
     problem = None
     if progid and method:
         try:
-            _live = _load(progid, method, path)
+            _load(progid, method, path)
             shown = show_dnc(exe or 'DNC2000.exe')
-            msg = f"Loaded into DNC:\n{os.path.basename(path)}"
+            msg = f"Sent to DNC - transfer to the machine started:\n{os.path.basename(path)}"
             if not shown:
                 msg += "\n\n(DNC's window could not be brought up - check the taskbar.)"
-            msg += ("\n\nKeep Clean The CAM open until the transfer has finished - "
-                    "DNC was started by it.")
             return (msg, True)
         except ImportError:
             problem = "pywin32 is not available in this build"

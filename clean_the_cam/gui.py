@@ -393,7 +393,7 @@ class App:
         if r.status == 'WARN' and not messagebox.askokcancel(
                 f"{APP} - warnings",
                 "This output passed WITH WARNINGS.\n\nHave you read them in the report?\n\n"
-                "OK = load it into DNC", parent=self.root):
+                "OK = send it to the machine through DNC", parent=self.root):
             return
         try:
             msg, automatic = dnc.load_into_dnc(dst, self.cfg)

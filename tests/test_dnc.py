@@ -44,14 +44,14 @@ def fake_com(monkeypatch):
     return calls
 
 
-def test_loads_via_automation_and_keeps_dnc_alive(tmp_path, fake_com):
+def test_loads_via_automation(tmp_path, fake_com):
     f = tmp_path / 'p_clean.ENC'
     f.write_text('%\n')
     msg, automatic = dnc.load_into_dnc(str(f), settings.DEFAULTS)
     assert automatic
     assert FakeDnc.loaded == [str(f)]
     assert fake_com == ['DNC.Document']
-    assert dnc._live is not None
+    assert 'transfer to the machine started' in msg
 
 
 def test_falls_back_to_opening_dnc(tmp_path, fake_com, monkeypatch):

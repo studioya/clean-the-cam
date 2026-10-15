@@ -88,14 +88,19 @@ own comments), and the
 
 ## Send to DNC
 
-cncKad's simulator opens Metalix DNC as an automation server
-(`DNC2000.exe -Embedding`) and calls `DNC.Document.LoadFile(path)`. **Send to
-DNC** does exactly the same (single file, PASS only — asks first on warnings).
-If that fails it opens DNC normally and puts the output path on the clipboard to
-paste in. The ProgID, method and DNC location can be changed under **Settings**.
+Works like the simulator's DNC button in cncKad: **Send to DNC** opens Metalix DNC
+with the file and **the transfer to the machine starts straight away** — nothing
+to do in DNC. Single file, PASS only; on PASS WITH WARNINGS it asks first.
+DNC stays open afterwards, so Clean The CAM can be closed.
+
+How: like cncKad, it starts DNC as an automation server (`DNC2000.exe
+-Embedding`), calls `DNC.Document.LoadFile` with the path passed by reference,
+and brings DNC's (hidden) window up. If that fails it opens DNC normally and puts
+the output path on the clipboard to paste in. The ProgID, method and DNC location
+can be changed under **Settings**. Tested with DNC 19.2.350.
 
 `tools/dnc_probe.py` lists the commands DNC accepts; `tools/dnc_test_load.py
-FILE` performs one LoadFile by hand and waits, so you can watch what DNC does.
+FILE` performs the same load by hand and waits, so you can watch what DNC does.
 
 ## Batch from the command line
 
