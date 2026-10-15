@@ -16,8 +16,8 @@ DEFAULTS = {
     'end_y': '',
     'last_dir': '',
     'dnc_exe': r'C:\Metalix\DNC.19\DNC2000.exe',
-    'dnc_progid': '',               # automation name, once known
-    'dnc_method': '',               # method that loads a file, once known
+    'dnc_progid': 'DNC.Document',   # what cncKad's simulator uses
+    'dnc_method': 'LoadFile',
 }
 
 
@@ -32,6 +32,10 @@ def load():
         with open(path(), encoding='utf-8') as f:
             saved = json.load(f)
         s.update({k: v for k, v in saved.items() if k in DEFAULTS})
+        # versions before the DNC automation was found saved these empty
+        for k in ('dnc_exe', 'dnc_progid', 'dnc_method'):
+            if not str(s.get(k) or '').strip():
+                s[k] = DEFAULTS[k]
     except (OSError, ValueError):
         pass
     return s

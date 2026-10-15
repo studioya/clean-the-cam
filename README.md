@@ -88,29 +88,14 @@ own comments), and the
 
 ## Send to DNC
 
-cncKad opens Metalix DNC as an automation server (`DNC2000.exe -Embedding`) and
-hands it the file. Until the automation name is known, **Send to DNC** opens DNC
-and puts the output path on the clipboard to paste in. Nothing is ever sent to
-the machine without pressing send in DNC.
+cncKad's simulator opens Metalix DNC as an automation server
+(`DNC2000.exe -Embedding`) and calls `DNC.Document.LoadFile(path)`. **Send to
+DNC** does exactly the same (single file, PASS only — asks first on warnings).
+If that fails it opens DNC normally and puts the output path on the clipboard to
+paste in. The ProgID, method and DNC location can be changed under **Settings**.
 
-To find the automation name (PowerShell):
-
-```powershell
-$hits = foreach ($root in 'Registry::HKEY_CLASSES_ROOT\CLSID','Registry::HKEY_CLASSES_ROOT\WOW6432Node\CLSID') {
-  Get-ChildItem $root -ErrorAction SilentlyContinue | ForEach-Object {
-    $ls = Get-ItemProperty "$($_.PSPath)\LocalServer32" -ErrorAction SilentlyContinue
-    if ($ls -and $ls.'(default)' -like '*DNC2000*') {
-      [pscustomobject]@{ CLSID = $_.PSChildName; Server = $ls.'(default)'
-        ProgID = (Get-ItemProperty "$($_.PSPath)\ProgID" -ErrorAction SilentlyContinue).'(default)' }
-    }
-  }
-}
-$hits | Format-List
-# then, with the ProgID:
-$dnc = New-Object -ComObject <ProgID>; $dnc | Get-Member
-```
-
-Put the ProgID and the method that loads a file under **Settings**.
+`tools/dnc_probe.py` lists the commands DNC accepts; `tools/dnc_test_load.py
+FILE` performs one LoadFile by hand and waits, so you can watch what DNC does.
 
 ## Batch from the command line
 

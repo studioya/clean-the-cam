@@ -396,8 +396,8 @@ class App:
                 "OK = load it into DNC", parent=self.root):
             return
         try:
-            msg = dnc.load_into_dnc(dst, self.cfg)
-            if not (self.cfg.get('dnc_progid') and self.cfg.get('dnc_method')):
+            msg, automatic = dnc.load_into_dnc(dst, self.cfg)
+            if not automatic:
                 self.root.clipboard_clear()
                 self.root.clipboard_append(os.path.abspath(dst))
             messagebox.showinfo(f"{APP} - DNC", msg, parent=self.root)
@@ -460,7 +460,7 @@ class SettingsDialog:
         e.configure(justify="left")
         e.grid(row=1, column=0, sticky="we", ipady=3)
         app._button(frm, "Browse...", self.browse).grid(row=1, column=1, padx=(8, 0))
-        tk.Label(frm, text="DNC automation (leave empty until known)", bg=BG, fg=FG,
+        tk.Label(frm, text="DNC automation", bg=BG, fg=FG,
                  font=("Segoe UI", 9, "bold")).grid(row=2, column=0, sticky="w", pady=(14, 0))
         for n, (text, var) in enumerate((("ProgID", self.progid),
                                          ("load method", self.method))):
@@ -470,9 +470,9 @@ class SettingsDialog:
             en = app._entry(row, var, 30)
             en.configure(justify="left")
             en.pack(side="left", ipady=2)
-        tk.Label(frm, text=("Without automation, Send to DNC opens DNC and copies the output\n"
-                            "path to the clipboard. Nothing is ever sent to the machine\n"
-                            "without you pressing send in DNC."),
+        tk.Label(frm, text=("Send to DNC calls DNC.Document.LoadFile, as cncKad's simulator\n"
+                            "does. If that fails it opens DNC and copies the output path\n"
+                            "to the clipboard to paste in."),
                  bg=BG, fg=DIM, justify="left", font=("Segoe UI", 8)).grid(
             row=5, column=0, columnspan=2, sticky="w", pady=(12, 0))
         btns = tk.Frame(frm, bg=BG)
