@@ -12,6 +12,7 @@ and calls nothing. Paste the whole output back.
 
 import glob
 import os
+import re
 import sys
 
 try:
@@ -23,6 +24,11 @@ except ImportError:
     sys.exit("pywin32 is missing:  python -m pip install pywin32")
 
 PROGID = sys.argv[1] if len(sys.argv) > 1 else "DNC.Document"
+COMMON = """Open OpenFile OpenDocument Load LoadFile LoadNC OpenNC Send SendFile SendNC
+Transmit Start Run Execute FileName File FilePath Path SetFile SetFileName NCFile Program
+ProgramName Machine SetMachine MachineName Port Baud Visible Show ShowWindow Hide Close
+Quit Exit Init Initialize AddFile Clear Reset Stop Receive Status Version Application
+Document Name Title""".split()
 KIND = {1: "method", 2: "property get", 4: "property put", 8: "property putref"}
 
 
@@ -93,6 +99,41 @@ for path in dict.fromkeys(candidates):
         found = True
     except pythoncom.com_error as ex:
         print(f"\n(no type library in {path}: {ex})")
+
+# 3. no type information: ask DNC which names it knows. Asking a name
+#    (GetIDsOfNames) never runs anything. Candidates are every identifier-like
+#    string inside the exe, plus common ones.
+if not found and server:
+    exe = server.split(" -")[0].strip().strip('"')
+    names = set(COMMON)
+    try:
+        with open(exe, "rb") as f:
+            blob = f.read()
+        names |= {m.decode() for m in re.findall(rb"[A-Za-z][A-Za-z0-9_]{2,40}", blob)}
+        names |= {m.decode("utf-16-le") for m in
+                  re.findall(rb"(?:[A-Za-z]\x00)(?:[A-Za-z0-9_]\x00){2,40}", blob)}
+    except OSError as ex:
+        print(f"\n(could not read {exe}: {ex})")
+    print(f"\nAsking DNC about {len(names)} candidate names (read-only)...")
+    try:
+        disp = win32com.client.Dispatch(PROGID)._oleobj_
+        known = {}
+        for n in sorted(names):
+            try:
+                known[n] = disp.GetIDsOfNames(n)
+            except pythoncom.com_error:
+                pass
+        # names are case-insensitive, so one command can match several spellings
+        by_id = {}
+        for n, dispid in known.items():
+            by_id.setdefault(dispid, []).append(n)
+        print(f"\n--- commands DNC.Document accepts ({len(by_id)}), in dispatch order:")
+        for dispid in sorted(by_id):
+            spellings = sorted(by_id[dispid], key=lambda v: (v.isupper() or v.islower(), v))
+            print(f"  [id {dispid:>4}]  {', '.join(spellings[:4])}")
+        found = bool(known)
+    except pythoncom.com_error as ex:
+        print(f"\n(could not ask DNC: {ex})")
 
 if not found:
     print("\nNothing readable found. Please also send a screenshot of DNC's own Help/About.")
