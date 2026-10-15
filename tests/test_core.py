@@ -162,7 +162,7 @@ def test_stamp_after_program_number():
     lines = r.text.splitlines()
     assert lines[1] == 'O7000 (TEST)'
     assert lines[2].startswith('(CLEAN THE CAM')
-    assert 'HOME X10. Y10.' in lines[2]
+    assert len(lines[2]) <= 52
 
 
 def test_already_processed_is_refused():

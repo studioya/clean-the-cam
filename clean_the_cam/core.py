@@ -716,15 +716,12 @@ def _process(source, opts, r, name):
 
     # ---------------- stamp ----------------------------------------------------
     if opts.stamp:
-        bits = [f"CLEAN THE CAM {VERSION}", target]
-        if opts.force_a0:
-            bits.append("A0")
+        # kept as short as cncKad's own comments - the control's limit is unknown
+        bits = [f"CLEAN THE CAM {VERSION}", target + (" A0" if opts.force_a0 else "")]
         if joined_strokes:
-            bits.append(f"{joined_strokes} STROKES JOINED")
+            bits.append(f"{joined_strokes} JOINED")
         if st['hatch_blocks']:
-            bits.append(f"{st['hatch_blocks']} HATCH RETARGETED")
-        if home is not None:
-            bits.append(f"HOME X{fmt(home[0])} Y{fmt(home[1])}")
+            bits.append(f"{st['hatch_blocks']} HATCH")
         stamp = Line("(" + ' - '.join(bits) + ")", None)
         at = (_find_src(out, info['oline'] + 1) + 1) if info['oline'] is not None else 1
         out.insert(at, stamp)

@@ -73,7 +73,8 @@ And it reports, as warnings:
 - pierce dwell still active on engraving (when *force pierce to A0* is off)
 
 The output header carries a stamp, e.g.
-`(CLEAN THE CAM 1.0 - E10 - A0 - 299 STROKES JOINED - HOME X10. Y10.)`, and the
+`(CLEAN THE CAM 1.0 - E10 A0 - 299 JOINED - 1 HATCH)` (kept as short as cncKad's
+own comments), and the
 `(JOB TIME ..)` comment is marked as cncKad's estimate *before* cleanup.
 
 ## Before cycle start
