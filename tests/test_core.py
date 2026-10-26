@@ -373,3 +373,28 @@ def test_report_renders_for_every_status():
     r = process('not a program\n', Options())
     assert r.status == 'FAIL'
     assert 'FAIL' in core.format_report('a', 'b', r)
+
+
+def test_changed_home_warns_with_reach():
+    # blade-style program: everything within a few mm of the origin
+    r = process(prog(STROKES, CUT), Options(home='bottom_left'))
+    assert r.ok
+    left, below, right, above = r.stats['home_reach']
+    assert (round(left, 2), round(below, 2)) == (10.0, 10.0)   # moves reach X0 Y0
+    assert any('OT-' in w and 'jog the head' in w for w in r.warnings)
+
+
+def test_kept_home_has_no_home_warning():
+    r = process(prog(STROKES, CUT), Options(home='keep'))
+    assert not any('OT-' in w for w in r.warnings)
+
+
+def test_blade_home_reach_matches_the_ot_alarm():
+    # run on the machine with G92 X10 Y10 from the reference position -> 4703 OT-
+    r = process(sample('blade_3.ENC'), Options(home='bottom_left'))
+    left, below, right, above = r.stats['home_reach']
+    assert (round(left, 1), round(below, 1)) == (7.1, 7.3)
+    out, src = body(r.text), body(read('blade_3.ENC'))
+    cut = lambda ls: ls[ls.index('E5'):]
+    assert cut(out) == cut(src)                       # the cut itself is untouched
+    assert r.stats['types_in'] == {'hatch': 0, 'fly': 0, 'stroke': 0, 'cut': 1}

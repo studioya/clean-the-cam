@@ -666,6 +666,24 @@ def _process(source, opts, r, name):
                              f"X{fmt(new_home[0])} Y{fmt(new_home[1])}")
         home = new_home
     st['home'] = home
+    if opts.home != 'keep' and info['g92'] is not None and home != info['g92']:
+        # G92 tells the control where the head IS at cycle start. Every move is
+        # measured from there, so say how far the program goes each way.
+        pts = [p for m in orig_moves for p in (m['start'], m['end'])]
+        if pts:
+            hx, hy = home
+            left = max(0.0, hx - min(p[0] for p in pts))
+            below = max(0.0, hy - min(p[1] for p in pts))
+            right = max(0.0, max(p[0] for p in pts) - hx)
+            above = max(0.0, max(p[1] for p in pts) - hy)
+            st['home_reach'] = (left, below, right, above)
+            r.warnings.append(
+                f"Home changed (G92 X{fmt(hx)} Y{fmt(hy)}): G92 tells the control where "
+                f"the head IS at cycle start, so jog the head to the start point first. "
+                f"From there the program moves up to {left:.1f} mm left, {below:.1f} mm "
+                f"down, {right:.1f} mm right and {above:.1f} mm up. If the head is "
+                f"anywhere else - e.g. still at its reference position - the moves land "
+                f"in the wrong place or past the travel limit (alarm 4703 OT-).")
 
     # ---------------- ending ---------------------------------------------------
     last_m104 = max(k for k, ln in enumerate(out) if ln.kind == 'M104')
